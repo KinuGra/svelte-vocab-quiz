@@ -31,4 +31,7 @@ npx svelte-add tailwindcss
 npm install @supabase/supabase-js
 ```
 
+環境構築が終わったらsrcフォルダ内のApp.svelteにソースコードを記述します
+ファイルを分割する際はsrcフォルダ内にファイルを作成します。
+
 <p align="right">(<a href="#top">トップへ</a>)</p>
