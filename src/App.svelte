@@ -84,18 +84,26 @@
     changeToQuestionAsync();
   }
 
+  let answerImage = "";
   /** 選択肢ボタンがクリックされたときの処理 */
   function answerButtonClicked(isCorrect){
     if(state!==QuestionState) return;
+    if (isCorrect){
+      answerImage="src/assets/maru.png"
+    }
+
     fancyScore.updateScore(isCorrect); // スコア更新
     score = fancyScore.getScore(); // 難易度分岐用のスコアの更新
     if(fancyScore.getRenzokuSeikai()>=5){
       time = Math.min(time+1, maxTime);
     }
+
+    // 不正解の時
     else if(!isCorrect){
+      answerImage = "src/assets/batu.png"
       time -= 1;
     }
-    changeToAnswer();
+    changeToAnswer();// 解答状態に移行
   }
 </script>
 
@@ -128,6 +136,13 @@
         </AnswerButton>
       {/each}
     </div>
+
+    <!-- 正解・不正解の画像を表示 -->
+    {#if state === AnswerState}
+      <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 flex justify-center items-center">
+        <img src={answerImage} alt="正誤判定" class = "w-100" />
+      </div>
+    {/if}
   {/if}
 </main>
 
