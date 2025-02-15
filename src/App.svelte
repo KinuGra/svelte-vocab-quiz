@@ -8,6 +8,7 @@
   import GameoverModal from './GameoverModal.svelte';
   import FancyScore from './FancyScore.svelte';
 
+
   const [InitialState, TitleState, QuestionState, AnswerState, GameoverState, QuizStart] = [0, 1, 2, 3, 4, 5];
   let state = InitialState; // 状態
   let quizdata;
@@ -21,6 +22,10 @@
   let quizDifficulty;
   let haikei;
   let score;
+
+  const music = new Audio("src/assets/sound/bgm.mp3")
+
+  
 
   /** 起動時に一度呼び出す：ライフサイクル関数 */
   onMount(changeToTitle);
@@ -49,6 +54,7 @@
       quizDifficulty = VeryHard;
       haikei = '/src/assets/Candles-and-candlesticks3.jpg';
     }
+  music.play()
 
     quizdata = await getQuizdataAsync(quizDifficulty); // 問題画面に遷移するたびにクイズデータを取得
     state = QuestionState;
@@ -64,6 +70,8 @@
   }
   function changeToGameover(){
     state = GameoverState;
+    music.pause();
+music.currentTime = 0;
     gameoverModal.showModal(fancyScore.getScore());
   }
   function changeToQuizstart(){
