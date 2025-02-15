@@ -2,6 +2,8 @@
     import RankingModal from "./RankingModal.svelte";
     let rankingModal;
     function showRanking(){
+        const startSound = new Audio("src/assets/sound/click.mp3")
+        startSound.play()
         rankingModal.showModal();
     }
 </script>
