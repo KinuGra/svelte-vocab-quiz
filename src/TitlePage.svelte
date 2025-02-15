@@ -1,8 +1,18 @@
 <script>
     import RankingModal from "./RankingModal.svelte";
+    import CreateRoom from "./CreateRoom.svelte"
+    import EnterRoom from "./EnterRoom.svelte";
     let rankingModal;
+    let createRoom;
+    let enterRoom;
     function showRanking(){
         rankingModal.showModal();
+    }
+    function showRoom(){
+        createRoom.showModal();
+    }
+    function showEnterRoom(){
+        enterRoom.showModal();
     }
 </script>
 
@@ -16,9 +26,17 @@
     <button on:click class="bg-cyan-500 text-white font-bold text-3xl rounded-full border-2 p-4 w-1/2">
         スタート
     </button>
+    <button on:click={showRoom} class="bg-cyan-500 text-white font-bold text-3xl rounded-full border-2 p-4 w-1/2">
+        ルーム作成
+    </button>
+    <button on:click={showEnterRoom} class="bg-cyan-500 text-white font-bold text-3xl rounded-full border-2 p-4 w-1/2">
+        ルーム参加
+    </button>
     <button on:click={showRanking} class="bg-cyan-500 text-white font-bold text-3xl rounded-full border-2 p-4 w-1/2">
         ランキング
     </button>
 </div>
 
 <RankingModal bind:this={rankingModal}/>
+<CreateRoom bind:this={createRoom}/>
+<EnterRoom bind:this={enterRoom}/>
