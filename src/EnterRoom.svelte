@@ -28,7 +28,7 @@
 
 <dialog bind:this={modal} class="border rounded-xl backdrop-blur-sm bg-white/30 p-10">
     <div class="text-center text-gray-700 flex flex-col items-center gap-10">
-        <div class="text-2xl font-extrabold">ルーム作成</div>
+        <div class="text-2xl font-extrabold">ルーム参加</div>
         <!-- <div class="text-xl font-bold"> -->
         <!-- 表示したいものがあればここに -->
         <!-- </div> -->

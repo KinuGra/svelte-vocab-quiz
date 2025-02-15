@@ -21,6 +21,7 @@
   let quizDifficulty;
   let haikei;
   let score;
+  let answerImage = "";
 
   /** 起動時に一度呼び出す：ライフサイクル関数 */
   onMount(changeToTitle);
@@ -92,10 +93,11 @@
   function answerButtonClicked(isCorrect){
     if(state!==QuestionState) return;
 
-    // 効果音（正解時の処理）
+    // 効果音、マルバツ画像の表示（正解時の処理）
     if(isCorrect){
       const successSound = new Audio("src/assets/sound/success.mp3")
       successSound.play()
+      answerImage="src/assets/maru.png"
     }
 
     fancyScore.updateScore(isCorrect); // スコア更新
@@ -105,11 +107,12 @@
     }
     else if(!isCorrect){
       time -= 1;
-      // 効果音（誤答時）
+      // 効果音、マルバツ表示（誤答時）
       const errorSound = new Audio("src/assets/sound/error.mp3")
       errorSound.play()
+      answerImage = "src/assets/batu.png"
     }
-    changeToAnswer();
+    changeToAnswer(); // 解答状態に移行
   }
 </script>
 
@@ -142,6 +145,13 @@
         </AnswerButton>
       {/each}
     </div>
+
+    <!-- 正解・不正解の画像を表示 -->
+    {#if state === AnswerState}
+      <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 flex justify-center items-center">
+        <img src={answerImage} alt="正誤判定" class = "w-100 opacity-50" />
+      </div>
+    {/if}
   {/if}
 </main>
 
