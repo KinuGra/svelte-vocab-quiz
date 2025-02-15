@@ -26,6 +26,13 @@
   /** 起動時に一度呼び出す：ライフサイクル関数 */
   onMount(changeToTitle);
 
+  // テキストを読み上げる関数
+  function speakText(text) {
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = "en-US"; // 英語で発音
+    speechSynthesis.speak(utterance);
+  }
+
   /** 状態遷移のための関数群 */
   function changeToTitle(){
     gameoverModal.closeModal();
@@ -53,6 +60,9 @@
 
     quizdata = await getQuizdataAsync(quizDifficulty); // 問題画面に遷移するたびにクイズデータを取得
     state = QuestionState;
+
+    // 問題文を読み上げる
+    speakText(quizdata.mondai);
   }
   function changeToAnswer(){ // 解答を表示する状態
     /* Answer状態のときにGameover状態に遷移するとsetTimeoutによってQuestion状態に遷移してしまうことに注意 */
