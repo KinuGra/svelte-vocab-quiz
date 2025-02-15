@@ -72,6 +72,10 @@
     quizDifficulty = VeryEasy;
     score = 0;
 
+    // 効果音の準備
+    const startSound = new Audio("src/assets/sound/click.mp3")
+    startSound.play()
+
     const timer = setInterval(()=>{
       if(state===QuestionState && time<0){
         clearInterval(timer);
@@ -87,6 +91,13 @@
   /** 選択肢ボタンがクリックされたときの処理 */
   function answerButtonClicked(isCorrect){
     if(state!==QuestionState) return;
+
+    // 効果音（正解時の処理）
+    if(isCorrect){
+      const successSound = new Audio("src/assets/sound/success.mp3")
+      successSound.play()
+    }
+
     fancyScore.updateScore(isCorrect); // スコア更新
     score = fancyScore.getScore(); // 難易度分岐用のスコアの更新
     if(fancyScore.getRenzokuSeikai()>=5){
@@ -94,6 +105,9 @@
     }
     else if(!isCorrect){
       time -= 1;
+      // 効果音（誤答時）
+      const errorSound = new Audio("src/assets/sound/error.mp3")
+      errorSound.play()
     }
     changeToAnswer();
   }

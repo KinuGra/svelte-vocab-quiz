@@ -5,13 +5,17 @@
     let rankingModal;
     let createRoom;
     let enterRoom;
+    const startSound = new Audio("src/assets/sound/click.mp3")
     function showRanking(){
+        startSound.play()
         rankingModal.showModal();
     }
     function showRoom(){
+        startSound.play()
         createRoom.showModal();
     }
     function showEnterRoom(){
+        startSound.play()
         enterRoom.showModal();
     }
 </script>
