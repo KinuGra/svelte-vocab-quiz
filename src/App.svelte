@@ -34,6 +34,7 @@
 
   /** 状態遷移のための関数群 */
   function changeToTitle(){
+    localStorage.setItem("quizHistory", JSON.stringify([]));
     gameoverModal.closeModal();
     state = TitleState;
   }
@@ -66,12 +67,27 @@
   function changeToAnswer(){ // 解答を表示する状態
     /* Answer状態のときにGameover状態に遷移するとsetTimeoutによってQuestion状態に遷移してしまうことに注意 */
     state = AnswerState;
+    saveQuizHistory(score, quizdata); // ← クイズ履歴を保存
     setTimeout(()=>{
       if(state===AnswerState){ // 中断などで状態を遷移した後に問題画面に遷移しないようにしておく
         changeToQuestionAsync();
       }
     }, 1000); // 1000ms後に問題画面に遷移
   }
+
+  // 履歴をローカルストレージに保存する関数
+  function saveQuizHistory(score, quizData) {
+  const history = JSON.parse(localStorage.getItem("quizHistory")) || [];
+  console.log(history)
+  const quizResult = {
+    score,
+    question: quizData.mondai,  // 問題内容
+    options: quizData.taku,      // 選択肢
+    correctAnswer: quizData.seikai // 正解
+  };
+  history.push(quizResult);
+  localStorage.setItem("quizHistory", JSON.stringify(history));
+}
   function changeToGameover(){
     state = GameoverState;
     gameoverModal.showModal(fancyScore.getScore());
@@ -127,7 +143,21 @@
       <TitlePage on:click={changeToQuizstart}></TitlePage>
     </div>
   {:else if state === GameoverState}
-    <div class="bg-[url('/src/assets/kouen.jpg')] bg-cover h-full w-full"></div>
+    <!-- クイズ履歴 -->
+    <div class="w-full max-w-lg bg-white/80 p-4 rounded-lg shadow-md">
+      <h3 class="text-center text-2xl font-bold mb-2">クイズ履歴</h3>
+      <ul class="text-center space-y-2">
+        {#each JSON.parse(localStorage.getItem("quizHistory")) || [] as item}
+          <li class="border p-2 bg-white rounded-md shadow">
+            <p class="font-semibold">問題: {item.question}</p>
+            <p>選択肢: {item.options.join(", ")}</p>
+            <p class="text-green-600">正解: {item.correctAnswer}</p>
+          </li>
+        {/each}
+      </ul>
+    </div>
+  </div>
+
 
   {:else if state===QuestionState || state===AnswerState}
     <!-- メニューバー --> <!-- FancyScoreはTitleに戻るときに消え、QuestionStateに戻るたびに再度作成され、currentScoreなどは初期化される -->
