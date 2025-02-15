@@ -125,7 +125,9 @@
     <div class="bg-[url('/src/assets/_school_in_spring_1.jpg')] bg-cover">
       <TitlePage on:click={changeToQuizstart}></TitlePage>
     </div>
-  {:else if state===QuestionState || state===AnswerState || state===GameoverState}
+  {:else if state === GameoverState}
+    <div class="bg-[url('/src/assets/kouen.jpg')] bg-cover h-full w-full"></div>
+  {:else if state===QuestionState || state===AnswerState}
     <!-- メニューバー --> <!-- FancyScoreはTitleに戻るときに消え、QuestionStateに戻るたびに再度作成され、currentScoreなどは初期化される -->
     <FancyScore bind:this={fancyScore}/> <!-- スコア、連続正解数、トランジションの表示 -->
 

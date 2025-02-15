@@ -20,11 +20,25 @@
         insertScoreAsync(name, score);
         dispatch("click");
     }
+
+    // TODO スコアの評価の調整
+    /** スコアに応じたメッセージとクラスを返す関数*/
+    function getScoreMessage(score) {
+    if (score <= 20) return { message: "Good"};
+    if (score <= 40) return { message: "Great"};
+    if (score <= 70) return { message: "Nice" };
+    if (score <= 100) return { message: "Excellent"};
+    return { message: "perfect", color: "text-red-500" };
+    }
 </script>
 
 <dialog bind:this={modal} class="border rounded-xl backdrop-blur-sm bg-white/30 p-10">
     <div class="text-center text-gray-700 flex flex-col items-center gap-10">
         <div class="text-2xl font-extrabold">Time is Up!</div>
+        <!-- スコアに応じたメッセージ表示 -->
+        <div class="text-4xl font-semibold {getScoreMessage(score).color} font-bold">
+            {getScoreMessage(score).message}
+        </div>
         <div class="text-xl font-bold">
             スコア:{score}
         </div>
