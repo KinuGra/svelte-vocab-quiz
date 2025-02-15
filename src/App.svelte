@@ -1,14 +1,13 @@
 <script>
-  import {onMount, tick} from 'svelte';
+  import { onMount, tick } from 'svelte';
   import AnswerButton from "./AnswerButton.svelte";
   import "./app.css";
-  import {getQuizdataAsync} from "./quizdataFactory";
+  import { getQuizdataAsync } from "./quizdataFactory";
   import TitlePage from "./TitlePage.svelte";
   import Progressbar from './Progressbar.svelte';
   import GameoverModal from './GameoverModal.svelte';
-  import FancyScore from './FancyScore.svelte';
-  import {insertScoreAsync} from './supabase.js';
-
+  import FancyScore from './FancyScore.svelte';  // 正しくインポート
+  import { insertScoreAsync } from './supabase.js';
 
   const [InitialState, TitleState, QuestionState, AnswerState, GameoverState, QuizStart] = [0, 1, 2, 3, 4, 5];
   let state = InitialState; // 状態
@@ -22,41 +21,53 @@
   const [VeryEasy, Easy, Normal, Hard, VeryHard] = [0, 1, 2, 3, 4];
   let quizDifficulty;
   let haikei;
-  let score;
+  let score = { currentScore: 0 };  // 初期値を設定
   let name = "";
+  export let currentScore = 0;
+  let renzokuSeikai = 0;
 
-  /** 起動時に一度呼び出す：ライフサイクル関数 */
-  onMount(changeToTitle);
+  /** 起動時に一度呼び出す */
+  onMount(() => {
+    changeToTitle();
+    if (fancyScore) {
+      score = fancyScore.getScore(); 
+    }
+  });
+  function updateScore(isCorrect) {
+  if (fancyScore) {
+    fancyScore.updateScore(isCorrect);
+    score = fancyScore.getScore();
+  }
+}
 
-   // テキストを読み上げる関数
+  // テキストを読み上げる関数
   function speakText(text) {
     const utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = "en-US"; // 英語で発音
-  speechSynthesis.speak(utterance);
+    utterance.lang = "en-US";
+    speechSynthesis.speak(utterance);
   }
 
-  /** 状態遷移のための関数群 */
-  function changeToTitle(){
+  // 状態遷移のための関数群
+  function changeToTitle() {
     localStorage.setItem("quizHistory", JSON.stringify([]));
     gameoverModal.closeModal();
     state = TitleState;
   }
-  async function changeToQuestionAsync(){
-    // スコアに応じて難易度調整
-    // TODO 難易度を変化させる点数の調整
-    if(score <= 15){
+
+  async function changeToQuestionAsync() {
+    if (score.currentScore <= 15) {
       quizDifficulty = VeryEasy;
       haikei = '/src/assets/_school_in_spring_1.jpg';
-    } else if(score <= 30){
+    } else if (score.currentScore <= 30) {
       quizDifficulty = Easy;
       haikei = '/src/assets/_school_in_spring_2.jpg';
-    } else if(score <= 65){
+    } else if (score.currentScore <= 65) {
       quizDifficulty = Normal;
       haikei = '/src/assets/library_3.jpg';
-    } else if(score <= 100){
+    } else if (score.currentScore <= 100) {
       quizDifficulty = Hard;
       haikei = '/src/assets/Torii-gate-and-the-first-sunrise-of-the-New-Year1.jpg';
-    } else{
+    } else {
       quizDifficulty = VeryHard;
       haikei = '/src/assets/Candles-and-candlesticks3.jpg';
     }
@@ -70,154 +81,154 @@
   function changeToAnswer(){ // 解答を表示する状態
     /* Answer状態のときにGameover状態に遷移するとsetTimeoutによってQuestion状態に遷移してしまうことに注意 */
     state = AnswerState;
-    saveQuizHistory(score, quizdata); // ← クイズ履歴を保存
-    setTimeout(()=>{
-      if(state===AnswerState){ // 中断などで状態を遷移した後に問題画面に遷移しないようにしておく
+    saveQuizHistory(score, quizdata);
+    setTimeout(() => {
+      if (state === AnswerState) {
         changeToQuestionAsync();
       }
-    }, 1000); // 1000ms後に問題画面に遷移
+    }, 1000);
   }
 
   // 履歴をローカルストレージに保存する関数
   function saveQuizHistory(score, quizData) {
-  const history = JSON.parse(localStorage.getItem("quizHistory")) || [];
-  console.log(history)
-  const quizResult = {
-    score,
-    question: quizData.mondai,  // 問題内容
-    options: quizData.taku,      // 選択肢
-    correctAnswer: quizData.seikai // 正解
-  };
-  history.push(quizResult);
-  localStorage.setItem("quizHistory", JSON.stringify(history));
-}
-  function changeToGameover(){
-    state = GameoverState;
-    //gameoverModal.showModal(fancyScore.getScore());
+    const history = JSON.parse(localStorage.getItem("quizHistory")) || [];
+    history.push({
+      score: currentScore,
+      question: quizData.mondai,
+      options: quizData.taku,
+      correctAnswer: quizData.seikai
+    });
+
+    localStorage.setItem("quizHistory", JSON.stringify(history));
   }
-  function changeToQuizstart(){
+
+  function changeToGameover() {
+    score = fancyScore.getScore()
+    console.log(score)
+    state = GameoverState;
+  }
+
+  function changeToQuizstart() {
     state = QuizStart;
     time = maxTime;
     quizDifficulty = VeryEasy;
-    score = 0;
+    console.log(score)
+    score.currentScore = 0;
 
-    const timer = setInterval(()=>{
-      if(state===QuestionState && time<0){
+    const timer = setInterval(() => {
+      if (state === QuestionState && time < 0) {
         clearInterval(timer);
         changeToGameover();
       }
-      if(state===QuestionState){
-        time -= 0.01; // 細かい数値ほど滑らかにプログレスバーが動くが負荷が大きくなる
+      if (state === QuestionState) {
+        time -= 0.01;
       }
-    }, 10); // 10ms=0.01秒ごとにtimeを0.01減らすことで、1秒ごとに1減らす
+    }, 10);
     changeToQuestionAsync();
   }
 
   let answerImage = "";
-  /** 選択肢ボタンがクリックされたときの処理 */
-  function answerButtonClicked(isCorrect){
-    if(state!==QuestionState) return;
-    if (isCorrect){
-      answerImage="src/assets/maru.png"
+  function answerButtonClicked(isCorrect) {
+    if (state !== QuestionState) return;
+    if (isCorrect) {
+      answerImage = "src/assets/maru.png";
     }
 
-    fancyScore.updateScore(isCorrect); // スコア更新
-    score = fancyScore.getScore(); // 難易度分岐用のスコアの更新
-    if(fancyScore.getRenzokuSeikai()>=5){
-      time = Math.min(time+1, maxTime);
-    }
-
-    // 不正解の時
-    else if(!isCorrect){
-      answerImage = "src/assets/batu.png"
+    fancyScore?.updateScore(isCorrect);
+    score.currentScore = fancyScore?.getScore().currentScore || 0;
+    if (fancyScore.getRenzokuSeikai() >= 5) {
+      time = Math.min(time + 1, maxTime);
+    } else if (!isCorrect) {
+      answerImage = "src/assets/batu.png";
       time -= 1;
     }
-    changeToAnswer();// 解答状態に移行
+    changeToAnswer();
   }
-  function okButtonClicked(){
-        localStorage.setItem("name", name); // ブラウザに名前を保存
-        insertScoreAsync(name, score);
-        changeToTitle()   
-        }
-            // スコアに応じたメッセージとクラスを返す関数
-    function getScoreMessage(score) {
-        if (score <= 20) return { message: "Good"};
-        if (score <= 40) return { message: "Great"};
-        if (score <= 70) return { message: "Nice" };
-        if (score <= 100) return { message: "Excellent"};
-        return { message: "perfect", color: "text-red-500" };
-    }
+
+  function okButtonClicked() {
+    localStorage.setItem("name", name);
+    insertScoreAsync(name, score.currentScore);
+    changeToTitle();
+  }
+
+  function getScoreMessage(score) {
+    if (score <= 20) return { message: "Good" };
+    if (score <= 40) return { message: "Great" };
+    if (score <= 70) return { message: "Nice" };
+    if (score <= 100) return { message: "Excellent" };
+    return { message: "perfect" };
+  }
 </script>
 
 <svelte:head>
   <title>QuizApp</title>
 </svelte:head>
 
-<main style="background-image: url({haikei})" class = "bg-cover flex flex-col h-svh">
-  {#if state===TitleState}
+<main style="background-image: url({haikei})" class="bg-cover flex flex-col h-svh">
+  <!-- FancyScore コンポーネントをここに追加 -->
+  <FancyScore bind:this={fancyScore} />
+
+  {#if state === TitleState}
     <div class="bg-[url('/src/assets/_school_in_spring_1.jpg')] bg-cover">
       <TitlePage on:click={changeToQuizstart}></TitlePage>
     </div>
   {:else if state === GameoverState}
-  <div class="bg-[url('/src/assets/kouen.jpg')] bg-cover h-full w-full flex flex-col  items-center p-4">
-    <!-- タイムアップの表示 -->
-    <h2 class="text-3xl font-bold text-red-600 mb-4">タイムアップ！</h2>
-    <!--スコアと評価-->
-    <div class="w-full max-w-lg bg-white/80 p-4 rounded-lg shadow-md flex flex-col  items-center mb-8 space-y-4">
-      <!-- スコアに応じたメッセージ表示 -->
-      <div class="text-4xl{getScoreMessage(score).color} font-bold">
-        {getScoreMessage(score).message}
-    </div>
-      <div class="text-xl font-bold">
-          スコア:{score}
+    <div class="bg-[url('/src/assets/kouen.jpg')] bg-cover h-full w-full flex flex-col items-center p-4">
+      <h2 class="text-3xl font-bold text-red-600 mb-4">タイムアップ！</h2>
+      <div class="w-full max-w-lg bg-white/80 p-4 rounded-lg shadow-md flex flex-col items-center mb-8 space-y-4">
+        <div class="text-4xl font-bold {getScoreMessage(score.currentScore).color}">
+          {getScoreMessage(score.currentScore).message}
+        </div>
+        <div class="text-xl font-bold">
+          スコア: {score.currentScore}
+        </div>
+
+        <!-- 正答率と最高連続正解数の表示 -->
+        <div class="text-lg">
+          正答率: {score.count > 0 ? Math.round((score.Allcorrectcount / score.count) * 100) : 0}%
+        </div>
+        <div class="text-lg">
+          最高連続正解数: {score.BestrenzokuSeikai}
+        </div>
+
+        <input bind:value={name} type="input" placeholder="名前の入力" class="p-3 border-none focus:outline-none rounded-xl w-full"/>
+        <button on:click={okButtonClicked} class="text-xl w-1/2 border-2 border-gray-500 rounded-xl">OK</button>
       </div>
-      <input bind:value={name} type="input" placeholder="名前の入力" class="p-3 border-none focus:outline-none rounded-xl w-full"/>
-      <button on:click={okButtonClicked} class="text-xl w-1/2 border-2 border-gray-500 rounded-xl">OK</button>
-  </div>
-    <!-- クイズ履歴 -->
-    <div class="w-full max-w-lg bg-white/80 p-4 rounded-lg shadow-md">
-      <h3 class="text-center text-2xl font-bold mb-2">クイズ履歴</h3>
-      <ul class="text-center space-y-2">
-        {#each JSON.parse(localStorage.getItem("quizHistory")) || [] as item}
-          <li class="border p-2 bg-white rounded-md shadow">
-            <p class="font-semibold">問題: {item.question}</p>
-            <p>選択肢: {item.options.join(", ")}</p>
-            <p class="text-green-600">正解: {item.correctAnswer}</p>
-          </li>
-        {/each}
-      </ul>
+
+      <div class="w-full max-w-lg bg-white/80 p-4 rounded-lg shadow-md">
+        <h3 class="text-center text-2xl font-bold mb-2">クイズ履歴</h3>
+        <ul class="text-center space-y-2">
+          {#each JSON.parse(localStorage.getItem("quizHistory")) || [] as item}
+            <li class="border p-2 bg-white rounded-md shadow">
+              <p class="font-semibold">問題: {item.question}</p>
+              <p>選択肢: {item.options.join(", ")}</p>
+              <p class="text-green-600">正解: {item.correctAnswer}</p>
+            </li>
+          {/each}
+        </ul>
+      </div>
     </div>
-  </div>
 
-
-  {:else if state===QuestionState || state===AnswerState}
-    <!-- メニューバー --> <!-- FancyScoreはTitleに戻るときに消え、QuestionStateに戻るたびに再度作成され、currentScoreなどは初期化される -->
-    <FancyScore bind:this={fancyScore}/> <!-- スコア、連続正解数、トランジションの表示 -->
-
-    <!-- プログレスバー --> <!-- <Progressbar/>は省略記法 -->
-    <Progressbar maxTime={maxTime} time={time}/> <!-- プロパティ名を省略して書くこともできる <Progressbar {maxTime} {time}/> -->
-
-    <!-- 問題 -->
+  {:else if state === QuestionState || state === AnswerState}
+    <FancyScore bind:this={fancyScore} />
+    <Progressbar maxTime={maxTime} time={time} />
     <div class="bg-white/60 font-extrabold text-center text-4xl py-4">{quizdata.mondai}</div>
-
-    <!-- 選択肢 -->
     <div class="bg-white/40 flex flex-col justify-around flex-grow items-center">
       {#each quizdata.taku as t}
-        <!-- 不正解の選択肢の色を変える -->
         <AnswerButton
-          isGrayout={state===AnswerState && quizdata.seikai!==t}
-          on:click={() => answerButtonClicked(quizdata.seikai===t)}>{t}
+          isGrayout={state === AnswerState && quizdata.seikai !== t}
+          on:click={() => answerButtonClicked(quizdata.seikai === t)}>
+          {t}
         </AnswerButton>
       {/each}
     </div>
 
-    <!-- 正解・不正解の画像を表示 -->
     {#if state === AnswerState}
       <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 flex justify-center items-center">
-        <img src={answerImage} alt="正誤判定" class = "w-100" />
+        <img src={answerImage} alt="正誤判定" class="w-100" />
       </div>
     {/if}
   {/if}
 </main>
 
-<GameoverModal bind:this={gameoverModal} on:click={changeToTitle}/>
+<GameoverModal bind:this={gameoverModal} on:click={changeToTitle} />
