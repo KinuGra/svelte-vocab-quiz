@@ -3,19 +3,29 @@
 
     let currentScore = 0;
     let renzokuSeikai = 0;
+    let count=0;
+    let Allcorrectcount=0;
     let showDelta = false;
 
     /** 回答時のスコアの更新 */
     export function updateScore(isCorrect){
+        count+=1;
         if(isCorrect){
             renzokuSeikai += 1;
+            Allcorrectcount+=1;
+            
             currentScore += renzokuSeikai;
             showDelta=true;
             setTimeout(()=>showDelta=false, 500);
         }
         else{
+            
             renzokuSeikai = 0;
         }
+    }
+    // 現在の正解数、問題数、正解数返す
+    export function getScorelist(){
+        return {currentScore,count,Allcorrectcount}
     }
 
     /** スコアを返す */

@@ -1,11 +1,15 @@
 <script>
     import { createEventDispatcher } from 'svelte';
     import {insertScoreAsync} from './supabase.js';
+    import FancyScore from './FancyScore.svelte';
 
     const dispatch = createEventDispatcher();
     let modal;
     let score;
+
+    
     let name = "";
+    let scorelist = FancyScore.getScorelist;
 
     export function showModal(currentScore){
         score = currentScore;
@@ -28,6 +32,8 @@
         <div class="text-xl font-bold">
             スコア:{score}
         </div>
+        <div class="text-xl font-bold">正答率:{score}</div>
+        
         <input bind:value={name} type="input" placeholder="名前の入力" class="p-3 border-none focus:outline-none rounded-xl w-full"/>
         <button on:click={okButtonClicked} class="text-xl w-1/2 border-2 border-gray-500 rounded-xl">OK</button>
     </div>
