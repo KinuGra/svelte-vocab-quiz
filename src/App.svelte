@@ -7,6 +7,8 @@
   import Progressbar from './Progressbar.svelte';
   import GameoverModal from './GameoverModal.svelte';
   import FancyScore from './FancyScore.svelte';
+  import {insertScoreAsync} from './supabase.js';
+
 
   const [InitialState, TitleState, QuestionState, AnswerState, GameoverState, QuizStart] = [0, 1, 2, 3, 4, 5];
   let state = InitialState; // 状態
@@ -21,6 +23,7 @@
   let quizDifficulty;
   let haikei;
   let score;
+  let name = "";
 
   /** 起動時に一度呼び出す：ライフサイクル関数 */
   onMount(changeToTitle);
@@ -90,7 +93,7 @@
 }
   function changeToGameover(){
     state = GameoverState;
-    gameoverModal.showModal(fancyScore.getScore());
+    //gameoverModal.showModal(fancyScore.getScore());
   }
   function changeToQuizstart(){
     state = QuizStart;
@@ -131,6 +134,19 @@
     }
     changeToAnswer();// 解答状態に移行
   }
+  function okButtonClicked(){
+        localStorage.setItem("name", name); // ブラウザに名前を保存
+        insertScoreAsync(name, score);
+        changeToTitle()   
+        }
+            // スコアに応じたメッセージとクラスを返す関数
+    function getScoreMessage(score) {
+        if (score <= 20) return { message: "Good"};
+        if (score <= 40) return { message: "Great"};
+        if (score <= 70) return { message: "Nice" };
+        if (score <= 100) return { message: "Excellent"};
+        return { message: "perfect", color: "text-red-500" };
+    }
 </script>
 
 <svelte:head>
@@ -143,6 +159,21 @@
       <TitlePage on:click={changeToQuizstart}></TitlePage>
     </div>
   {:else if state === GameoverState}
+  <div class="bg-[url('/src/assets/kouen.jpg')] bg-cover h-full w-full flex flex-col  items-center p-4">
+    <!-- タイムアップの表示 -->
+    <h2 class="text-3xl font-bold text-red-600 mb-4">タイムアップ！</h2>
+    <!--スコアと評価-->
+    <div class="w-full max-w-lg bg-white/80 p-4 rounded-lg shadow-md flex flex-col  items-center mb-8 space-y-4">
+      <!-- スコアに応じたメッセージ表示 -->
+      <div class="text-4xl{getScoreMessage(score).color} font-bold">
+        {getScoreMessage(score).message}
+    </div>
+      <div class="text-xl font-bold">
+          スコア:{score}
+      </div>
+      <input bind:value={name} type="input" placeholder="名前の入力" class="p-3 border-none focus:outline-none rounded-xl w-full"/>
+      <button on:click={okButtonClicked} class="text-xl w-1/2 border-2 border-gray-500 rounded-xl">OK</button>
+  </div>
     <!-- クイズ履歴 -->
     <div class="w-full max-w-lg bg-white/80 p-4 rounded-lg shadow-md">
       <h3 class="text-center text-2xl font-bold mb-2">クイズ履歴</h3>
