@@ -2,9 +2,11 @@
     import RankingModal from "./RankingModal.svelte";
     import CreateRoom from "./CreateRoom.svelte"
     import EnterRoom from "./EnterRoom.svelte";
+    import { createEventDispatcher } from 'svelte';
     let rankingModal;
     let createRoom;
     let enterRoom;
+    const dispatch = createEventDispatcher();
     const startSound = new Audio("src/assets/sound/click.mp3")
     function showRanking(){
         startSound.play()
@@ -17,6 +19,9 @@
     function showEnterRoom(){
         startSound.play()
         enterRoom.showModal();
+    }
+    function piyo(){
+        dispatch("click");
     }
 </script>
 
@@ -42,5 +47,5 @@
 </div>
 
 <RankingModal bind:this={rankingModal}/>
-<CreateRoom bind:this={createRoom}/>
-<EnterRoom bind:this={enterRoom}/>
+<CreateRoom bind:this={createRoom} on:play={piyo}/>
+<EnterRoom bind:this={enterRoom} on:play={piyo}/>

@@ -1,6 +1,6 @@
 <script>
     import { createEventDispatcher } from 'svelte';
-    import {insertChildDataAsync, searchRoomId, updateRoomStateAsync} from './supabase.js';
+    import {hoge, insertChildDataAsync, searchRoomId, updateRoomStateAsync} from './supabase.js';
     import { SvelteURLSearchParams } from 'svelte/reactivity';
 
     const dispatch = createEventDispatcher();
@@ -13,17 +13,26 @@
     export function closeModal(){
         modal.close();
     }
+    /** 参加者をデータベースに追加し、stateを更新 */
     async function okButtonClicked(){
         if(await searchRoomId(roomId)){
             dispatch("click");
-            modal.close();
+            // modal.close();
+            hoge(roomId,"child", () => {
+                modal.close()
+            });
             insertChildDataAsync(roomId);
             updateRoomStateAsync(roomId, "parent", "ongoing");
+            hoge(roomId,"parent", () => {
+                modal.close()
+                dispatch("play");
+            });
         } else{
             dispatch("click");
             modal.close();
         }
     }
+
 </script>
 
 <dialog bind:this={modal} class="border rounded-xl backdrop-blur-sm bg-white/30 p-10">

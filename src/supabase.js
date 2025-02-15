@@ -1,7 +1,45 @@
 import { createClient } from '@supabase/supabase-js';
+
 const supabaseUrl = 'https://qtvupqmejznswayexraz.supabase.co'; // プロジェクトによる
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0dnVwcW1lanpuc3dheWV4cmF6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzkyNDIxODcsImV4cCI6MjA1NDgxODE4N30.erzGRYZbPmGc-6pTsOhmyxYPT04w8MEDph8ijU5iZFA'; // プロジェクトによる
 const supabase = createClient(supabaseUrl, supabaseKey);
+
+/**  */
+// export function hoge(roomId, callback){
+//     supabase
+//     .channel(roomId)
+//     .on(
+//         "postgres_changes",
+//         {
+//             event: "*",
+//             schema: "public",
+//             table: "Room",
+//         },
+//         (payload) => {
+//             // 変更後のデータに対しての処理を記載
+//             console.log(payload);
+//             callback();
+//         }
+//     )
+//     .subscribe()
+// }
+export async function hoge(roomId, user, callback) {
+    const intervalId =window.setInterval(() => {
+        getState(roomId, user).then(data => {
+            console.log(data);
+            if (data && data.state === "ongoing") {
+                window.clearInterval(intervalId); // 状態が "ongoing" になったらポーリングを停止
+                callback(); // コールバックを実行
+            }
+        }).catch(error => {
+            if (error) {
+                console.error(error);
+                intervalId && window.clearInterval(intervalId); // エラーが発生した場合はポーリングを停止
+                return;
+            }
+        })
+    }, 1000); // 1秒ごとに実行
+}
 
 /** データベースからidsの行のtango, imiの抽出 */
 export async function fetchTangoImiAsync(ids, mondaiDatabaseIndex){
@@ -50,14 +88,37 @@ export async function fetchRankingAsync(){
     return data;
 }
 
-/** ルーム作成 */
-export async function createRoomAsync(roomId){
-    const { error } = await supabase
+/** ルーム作成（ルームが存在する場合は作成しない） */
+export async function createRoomAsync(roomId) {
+    // roomId が既に存在するか確認
+    const { data, error: selectError } = await supabase
         .from('Room')
-        .insert({ roomId, user:"parent", state:"prepare", score:0 });
-    if (error) {
-        console.error(error);
+        .select('roomId')
+        .eq('roomId', roomId)
+        .limit(1);
+
+    if (selectError) {
+        console.error('Error checking room:', selectError.message);
+        return null; // エラーが発生したら処理を中断
     }
+
+    if (data.length > 0) { // 既にroomIdが存在する場合は処理しない
+        console.log(`Room with roomId ${roomId} already exists. Skipping insert.`);
+        return null;
+    }
+
+    // roomId が存在しない場合のみ挿入
+    const { error: insertError } = await supabase
+        .from('Room')
+        .insert([{ roomId, user: "parent", state: "prepare", score: 0 }]);
+
+    if (insertError) {
+        console.error('Error inserting room:', insertError.message);
+        return null;
+    }
+
+    console.log(`Room ${roomId} created successfully.`);
+    return true; // 成功した場合は true を返す
 }
 
 /** ルーム参加 */
@@ -103,5 +164,21 @@ export async function updateRoomStateAsync(roomId, user, newState) {
     }
 
     console.log('Room state updated successfully:', data);
+    return data;
+}
+
+/** 対戦クイズの状態を取得 */
+export async function getState(roomId, user){
+    const { data, error } = await supabase
+        .from('Room') // テーブル名を指定
+        .select('state') // すべてのカラムを取得（必要に応じてカラムを指定）
+        .neq('roomId', '') // not equal : 空文字でないデータのみ取得
+        .eq('roomId', roomId) // roomIdが一致するデータを取得
+        .eq('user', user)
+        .single();
+    if (error) {
+        console.error('Error fetching rooms:', error)
+        return null;
+    }
     return data;
 }

@@ -1,6 +1,6 @@
 <script>
     import { createEventDispatcher } from 'svelte';
-    import {createRoomAsync} from './supabase.js';
+    import {createRoomAsync, hoge} from './supabase.js';
 
     const dispatch = createEventDispatcher();
     let modal;
@@ -15,7 +15,10 @@
     function okButtonClicked(){
         createRoomAsync(roomId);
         dispatch("click");
-        modal.close();
+        hoge(roomId,"parent", () => {
+                modal.close()
+                dispatch("play");
+        });
     }
 </script>
 
