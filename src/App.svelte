@@ -21,10 +21,10 @@
   const [VeryEasy, Easy, Normal, Hard, VeryHard] = [0, 1, 2, 3, 4];
   let quizDifficulty;
   let haikei;
+  let currentScore = 0;
+  let renzokuSeikai = 0;
   let score = { currentScore: 0 };  // 初期値を設定
   let name = "";
-  export let currentScore = 0;
-  let renzokuSeikai = 0;
 
   /** 起動時に一度呼び出す */
   onMount(() => {
@@ -33,12 +33,6 @@
       score = fancyScore.getScore(); 
     }
   });
-  function updateScore(isCorrect) {
-  if (fancyScore) {
-    fancyScore.updateScore(isCorrect);
-    score = fancyScore.getScore();
-  }
-}
 
   // テキストを読み上げる関数
   function speakText(text) {
@@ -50,7 +44,7 @@
   // 状態遷移のための関数群
   function changeToTitle() {
     localStorage.setItem("quizHistory", JSON.stringify([]));
-    gameoverModal.closeModal();
+    //gameoverModal.closeModal();
     state = TitleState;
   }
 
@@ -103,29 +97,33 @@
   }
 
   function changeToGameover() {
+    // ASからGSに変更
+    state=GameoverState
     score = fancyScore.getScore()
-    console.log(score)
-    state = GameoverState;
   }
 
   function changeToQuizstart() {
     state = QuizStart;
     time = maxTime;
     quizDifficulty = VeryEasy;
-    console.log(score)
     score.currentScore = 0;
 
     const timer = setInterval(() => {
-      if (state === QuestionState && time < 0) {
-        clearInterval(timer);
-        changeToGameover();
-      }
       if (state === QuestionState) {
-        time -= 0.01;
-      }
-    }, 10);
+        if (time <= 0) {  // 括弧の位置を修正
+          console.log("hontoni zero??")
+          clearInterval(timer);
+          changeToGameover();
+          } else {
+            time -= 0.1;
+          }
+        }
+    }, 100);
     changeToQuestionAsync();
   }
+
+
+
 
   let answerImage = "";
   function answerButtonClicked(isCorrect) {
@@ -138,7 +136,8 @@
     score.currentScore = fancyScore?.getScore().currentScore || 0;
     if (fancyScore.getRenzokuSeikai() >= 5) {
       time = Math.min(time + 1, maxTime);
-    } else if (!isCorrect) {
+    } 
+    else if (!isCorrect) {
       answerImage = "src/assets/batu.png";
       time -= 1;
     }
@@ -152,12 +151,13 @@
   }
 
   function getScoreMessage(score) {
-    if (score <= 20) return { message: "Good" };
-    if (score <= 40) return { message: "Great" };
-    if (score <= 70) return { message: "Nice" };
-    if (score <= 100) return { message: "Excellent" };
+    if (score.currentScore <= 20) return { message: "Good" };
+    if (score.currentScore <= 40) return { message: "Great" };
+    if (score.currentScore <= 70) return { message: "Nice" };
+    if (score.currentScore <= 100) return { message: "Excellent" };
     return { message: "perfect" };
   }
+  
 </script>
 
 <svelte:head>
@@ -184,17 +184,14 @@
         </div>
 
         <!-- 正答率と最高連続正解数の表示 -->
-        <div class="text-lg">
-          正答率: {score.count > 0 ? Math.round((score.Allcorrectcount / score.count) * 100) : 0}%
-        </div>
-        <div class="text-lg">
-          最高連続正解数: {score.BestrenzokuSeikai}
-        </div>
+        <div class="text-xl font-bold">正答率:{(score.Allcorrectcount/score.count)*100}%</div>
+        <div class="text-xl font-bold">最高連続正解数:{score.BestrenzokuSeikai}</div>
 
         <input bind:value={name} type="input" placeholder="名前の入力" class="p-3 border-none focus:outline-none rounded-xl w-full"/>
         <button on:click={okButtonClicked} class="text-xl w-1/2 border-2 border-gray-500 rounded-xl">OK</button>
       </div>
-
+    </div> 
+    <div class="flex justify-center items-start w-full min-h-screen bg-cover mt-16">
       <div class="w-full max-w-lg bg-white/80 p-4 rounded-lg shadow-md">
         <h3 class="text-center text-2xl font-bold mb-2">クイズ履歴</h3>
         <ul class="text-center space-y-2">
@@ -208,9 +205,8 @@
         </ul>
       </div>
     </div>
-
+    
   {:else if state === QuestionState || state === AnswerState}
-    <FancyScore bind:this={fancyScore} />
     <Progressbar maxTime={maxTime} time={time} />
     <div class="bg-white/60 font-extrabold text-center text-4xl py-4">{quizdata.mondai}</div>
     <div class="bg-white/40 flex flex-col justify-around flex-grow items-center">
