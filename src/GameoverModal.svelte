@@ -51,7 +51,7 @@
         <input bind:value={name} type="input" placeholder="名前の入力" class="p-3 border-none focus:outline-none rounded-xl w-full"/>
         <button on:click={okButtonClicked} class="text-xl w-1/2 border-2 border-gray-500 rounded-xl">OK</button>
         <div class="text-4xl font-extrabold">対戦結果</div>
-        <div class="text-2xl font-extrabold">
+        <div class="text-3xl font-extrabold">
             {#if score > enemyScore}
                 勝ち
             {:else if score === enemyScore}
