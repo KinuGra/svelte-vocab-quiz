@@ -23,6 +23,8 @@
   let haikei;
   let score;
 
+  const titleMusic = new Audio("src/assets/sound/わんぱくメカニズム.mp3")
+
   const music = new Audio("src/assets/sound/bgm.mp3")
 
   
@@ -31,10 +33,19 @@
   onMount(changeToTitle);
 
   /** 状態遷移のための関数群 */
+
   function changeToTitle(){
     gameoverModal.closeModal();
     state = TitleState;
+    // titleMusic.play()
   }
+  /** 起動時に一度呼び出す：ライフサイクル関数 */
+  onMount(changeToTitle);
+
+
+
+
+  
   async function changeToQuestionAsync(){
     // スコアに応じて難易度調整
     // TODO 難易度を変化させる点数の調整
@@ -131,7 +142,9 @@ music.currentTime = 0;
 </svelte:head>
 
 <main style="background-image: url({haikei})" class = "bg-cover flex flex-col h-svh">
+  
   {#if state===TitleState}
+  <audio src="src/assets/sound/わんぱくメカニズム.mp3" loop autoplay></audio>
     <div class="bg-[url('/src/assets/_school_in_spring_1.jpg')] bg-cover">
       <TitlePage on:click={changeToQuizstart}></TitlePage>
     </div>
