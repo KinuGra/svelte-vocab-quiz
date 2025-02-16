@@ -49,19 +49,19 @@
     // TODO 難易度を変化させる点数の調整
     if(score <= 15){
       quizDifficulty = VeryEasy;
-      haikei = '/src/assets/_school_in_spring_1.jpg';
+      haikei = '/assets/_school_in_spring_1.jpg';
     } else if(score <= 30){
       quizDifficulty = Easy;
-      haikei = '/src/assets/_school_in_spring_2.jpg';
+      haikei = '/assets/_school_in_spring_2.jpg';
     } else if(score <= 65){
       quizDifficulty = Normal;
-      haikei = '/src/assets/library_3.jpg';
+      haikei = '/assets/library_3.jpg';
     } else if(score <= 100){
       quizDifficulty = Hard;
-      haikei = '/src/assets/Torii-gate-and-the-first-sunrise-of-the-New-Year1.jpg';
+      haikei = '/assets/Torii-gate-and-the-first-sunrise-of-the-New-Year1.jpg';
     } else{
       quizDifficulty = VeryHard;
-      haikei = '/src/assets/Candles-and-candlesticks3.jpg';
+      haikei = '/assets/Candles-and-candlesticks3.jpg';
     }
 
     quizdata = await getQuizdataAsync(quizDifficulty); // 問題画面に遷移するたびにクイズデータを取得
@@ -92,7 +92,7 @@
     isTaisen = getIsTaisen();
 
     // 効果音の準備
-    const startSound = new Audio("src/assets/sound/click.mp3")
+    const startSound = new Audio("/assets/sound/click.mp3")
     startSound.play()
 
     // 時間切れ後の処理
@@ -117,9 +117,9 @@
 
     // 効果音、マルバツ画像の表示（正解時の処理）
     if(isCorrect){
-      const successSound = new Audio("src/assets/sound/success.mp3")
+      const successSound = new Audio("/assets/sound/success.mp3")
       successSound.play()
-      answerImage="src/assets/maru.png"
+      answerImage="/assets/maru.png"
     }
 
     fancyScore.updateScore(isCorrect); // スコア更新
@@ -130,9 +130,9 @@
     else if(!isCorrect){
       time -= 1;
       // 効果音、マルバツ表示（誤答時）
-      const errorSound = new Audio("src/assets/sound/error.mp3")
+      const errorSound = new Audio("/assets/sound/error.mp3")
       errorSound.play()
-      answerImage = "src/assets/batu.png"
+      answerImage = "/assets/batu.png"
     }
     changeToAnswer(); // 解答状態に移行
   }
@@ -158,11 +158,11 @@
 
 <main style="background-image: url({haikei})" class = "bg-cover flex flex-col h-svh">
   {#if state===TitleState}
-    <div class="bg-[url('/src/assets/_school_in_spring_1.jpg')] bg-cover">
+    <div class="bg-[url('/assets/_school_in_spring_1.jpg')] bg-cover">
       <TitlePage on:click={changeToQuizstart}></TitlePage>
     </div>
   {:else if state === GameoverState}
-    <div class="bg-[url('/src/assets/kouen.jpg')] bg-cover h-full w-full"></div>
+    <div class="bg-[url('/assets/kouen.jpg')] bg-cover h-full w-full"></div>
   {:else if state===QuestionState || state===AnswerState}
     <!-- メニューバー --> <!-- FancyScoreはTitleに戻るときに消え、QuestionStateに戻るたびに再度作成され、currentScoreなどは初期化される -->
     <FancyScore bind:this={fancyScore}/> <!-- スコア、連続正解数、トランジションの表示 -->

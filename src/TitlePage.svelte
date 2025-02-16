@@ -7,7 +7,7 @@
     let createRoom;
     let enterRoom;
     const dispatch = createEventDispatcher();
-    const startSound = new Audio("src/assets/sound/click.mp3")
+    const startSound = new Audio("/assets/sound/click.mp3")
     function showRanking(){
         startSound.play()
         rankingModal.showModal();
