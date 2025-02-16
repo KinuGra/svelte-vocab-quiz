@@ -20,12 +20,12 @@
         startSound.play()
         enterRoom.showModal();
     }
-    function piyo(){
+    function handlePlayEvent(){
         dispatch("click");
     }
 </script>
 
-<div class="flex flex-col justify-center items-center h-svh gap-14">
+<div class="flex flex-col justify-center items-center h-svh gap-8">
     <div class="text-7xl font-extrabold backdrop-blur-sm bg-white/10 p-4 rounded-2xl">
         Quiz
     </div>
@@ -47,5 +47,5 @@
 </div>
 
 <RankingModal bind:this={rankingModal}/>
-<CreateRoom bind:this={createRoom} on:play={piyo}/>
-<EnterRoom bind:this={enterRoom} on:play={piyo}/>
+<CreateRoom bind:this={createRoom} on:play={handlePlayEvent}/>
+<EnterRoom bind:this={enterRoom} on:play={handlePlayEvent}/>

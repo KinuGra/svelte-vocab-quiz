@@ -1,6 +1,6 @@
 <script>
     import { createEventDispatcher } from 'svelte';
-    import {createRoomAsync, hoge} from './supabase.js';
+    import {createRoomAsync, pollUntilOngoing, taisenSet, pollUntilFinish, getScore} from './supabase.js';
 
     const dispatch = createEventDispatcher();
     let modal;
@@ -13,12 +13,15 @@
         modal.close();
     }
     function okButtonClicked(){
+        taisenSet(); // supabase.jsのisTaiseをtrueにセット
         createRoomAsync(roomId);
         dispatch("click");
-        hoge(roomId,"parent", () => {
+        pollUntilOngoing(roomId,"parent", () => {
                 modal.close()
                 dispatch("play");
-        });
+        })
+        localStorage.setItem("roomId", roomId);
+        localStorage.setItem("user", "parent");
     }
 </script>
 

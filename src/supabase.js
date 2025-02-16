@@ -3,33 +3,53 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = 'https://qtvupqmejznswayexraz.supabase.co'; // プロジェクトによる
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0dnVwcW1lanpuc3dheWV4cmF6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzkyNDIxODcsImV4cCI6MjA1NDgxODE4N30.erzGRYZbPmGc-6pTsOhmyxYPT04w8MEDph8ijU5iZFA'; // プロジェクトによる
 const supabase = createClient(supabaseUrl, supabaseKey);
+let tmpRoomId;
+let tmpUser;
+let isTaisen = false;
 
-/**  */
-// export function hoge(roomId, callback){
-//     supabase
-//     .channel(roomId)
-//     .on(
-//         "postgres_changes",
-//         {
-//             event: "*",
-//             schema: "public",
-//             table: "Room",
-//         },
-//         (payload) => {
-//             // 変更後のデータに対しての処理を記載
-//             console.log(payload);
-//             callback();
-//         }
-//     )
-//     .subscribe()
-// }
-export async function hoge(roomId, user, callback) {
+export function taisenSet(){
+    isTaisen = true;
+}
+export function getIsTaisen(){
+    return isTaisen;
+}
+export function getRoomId(){
+    return tmpRoomId;
+}
+export function getUser(){
+    return tmpUser;
+}
+
+/** ongoingになるまでポーリング */
+export async function pollUntilOngoing(roomId, user, callback) {
+    tmpRoomId = roomId;
+    tmpUser = user;
     const intervalId =window.setInterval(() => {
         getState(roomId, user).then(data => {
             console.log(data);
             if (data && data.state === "ongoing") {
                 window.clearInterval(intervalId); // 状態が "ongoing" になったらポーリングを停止
                 callback(); // コールバックを実行
+            }
+        }).catch(error => {
+            if (error) {
+                console.error(error);
+                intervalId && window.clearInterval(intervalId); // エラーが発生した場合はポーリングを停止
+                return;
+            }
+        })
+    }, 100); // 0.1秒ごとに実行
+}
+/** finishになるまでポーリング */
+export async function pollUntilFinish(roomId, user, callback) {
+    const intervalId =window.setInterval(() => {
+        getState(roomId, user).then(data => {
+            console.log(data);
+            if (data && data.state === "finish") {
+                window.clearInterval(intervalId); // 状態が "finish" になったらポーリングを停止
+                getScore(roomId, user).then(scoreData => {
+                    callback(scoreData.score);
+                })
             }
         }).catch(error => {
             if (error) {
@@ -151,13 +171,30 @@ export async function insertChildDataAsync(roomId){
     }
 }
 
+/** 対戦終了時のスコアの書き込み */
+export async function updateRoomScoreAsync(roomId, user, score) {
+    const { data, error } = await supabase
+        .from('Room') // テーブル名
+        .update({ score: score }) // 更新するカラムと値
+        .eq('roomId', roomId) // 条件（roomIdが一致する行を更新）
+        .eq('user', user);
+    if (error) {
+        console.error('Error updating room state:', error);
+        return null;
+    }
+
+    console.log('Room state updated successfully:', data);
+    return data;
+}
+
+
 // roomIdが一致する行のstateを更新する関数
 export async function updateRoomStateAsync(roomId, user, newState) {
     const { data, error } = await supabase
         .from('Room') // テーブル名
         .update({ state: newState }) // 更新するカラムと値
         .eq('roomId', roomId) // 条件（roomIdが一致する行を更新）
-        .eq('user', user); // userが'parent'のみ更新
+        .eq('user', user);
     if (error) {
         console.error('Error updating room state:', error);
         return null;
@@ -172,6 +209,22 @@ export async function getState(roomId, user){
     const { data, error } = await supabase
         .from('Room') // テーブル名を指定
         .select('state') // すべてのカラムを取得（必要に応じてカラムを指定）
+        .neq('roomId', '') // not equal : 空文字でないデータのみ取得
+        .eq('roomId', roomId) // roomIdが一致するデータを取得
+        .eq('user', user)
+        .single();
+    if (error) {
+        console.error('Error fetching rooms:', error)
+        return null;
+    }
+    return data;
+}
+
+/** 対戦クイズのスコアを取得 */
+export async function getScore(roomId, user){
+    const { data, error } = await supabase
+        .from('Room') // テーブル名を指定
+        .select('score') // すべてのカラムを取得（必要に応じてカラムを指定）
         .neq('roomId', '') // not equal : 空文字でないデータのみ取得
         .eq('roomId', roomId) // roomIdが一致するデータを取得
         .eq('user', user)

@@ -1,11 +1,11 @@
 <script>
     import { createEventDispatcher } from 'svelte';
-    import {hoge, insertChildDataAsync, searchRoomId, updateRoomStateAsync} from './supabase.js';
+    import {pollUntilOngoing, insertChildDataAsync, searchRoomId, updateRoomStateAsync, pollUntilFinish, taisenSet, getScore} from './supabase.js';
     import { SvelteURLSearchParams } from 'svelte/reactivity';
 
     const dispatch = createEventDispatcher();
     let modal;
-    let roomId = "";
+    export let roomId = "";
 
     export function showModal(){
         modal.showModal();
@@ -15,24 +15,27 @@
     }
     /** 参加者をデータベースに追加し、stateを更新 */
     async function okButtonClicked(){
+        taisenSet(); // supabase.jsのisTaiseをtrueにセット
         if(await searchRoomId(roomId)){
             dispatch("click");
             // modal.close();
-            hoge(roomId,"child", () => {
-                modal.close()
-            });
+            // pollUntilOngoing(roomId,"child", () => {
+            //     modal.close()
+            // });
             insertChildDataAsync(roomId);
             updateRoomStateAsync(roomId, "parent", "ongoing");
-            hoge(roomId,"parent", () => {
+            /** ongoingになるまでポーリング */
+            pollUntilOngoing(roomId,"child", () => {
                 modal.close()
                 dispatch("play");
             });
+            localStorage.setItem("roomId", roomId);
+            localStorage.setItem("user", "child");
         } else{
             dispatch("click");
             modal.close();
         }
     }
-
 </script>
 
 <dialog bind:this={modal} class="border rounded-xl backdrop-blur-sm bg-white/30 p-10">

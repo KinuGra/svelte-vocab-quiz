@@ -7,8 +7,10 @@
   import Progressbar from './Progressbar.svelte';
   import GameoverModal from './GameoverModal.svelte';
   import FancyScore from './FancyScore.svelte';
+  import {getIsTaisen, getRoomId, getUser, pollUntilFinish, taisenSet, updateRoomScoreAsync, updateRoomStateAsync} from './supabase.js';
+  import { createEventDispatcher } from 'svelte';
 
-  const [InitialState, TitleState, QuestionState, AnswerState, GameoverState, QuizStart] = [0, 1, 2, 3, 4, 5];
+  const [InitialState, TitleState, QuestionState, AnswerState, GameoverState, QuizStart, TaisenResult] = [0, 1, 2, 3, 4, 5, 6];
   let state = InitialState; // 状態
   let quizdata;
 
@@ -22,6 +24,10 @@
   let haikei;
   let score;
   let answerImage = "";
+  let isTaisen = false; // 対戦かソロプレイか
+  const dispatch = createEventDispatcher();
+  let isFinish;
+  let enemyScore; // 対戦相手のスコア
 
   /** 起動時に一度呼び出す：ライフサイクル関数 */
   onMount(changeToTitle);
@@ -75,22 +81,28 @@
   }
   function changeToGameover(){
     state = GameoverState;
-    gameoverModal.showModal(fancyScore.getScore());
+    gameoverModal.showModal(fancyScore.getScore(), enemyScore);
   }
   function changeToQuizstart(){
     state = QuizStart;
     time = maxTime;
     quizDifficulty = VeryEasy;
     score = 0;
+    isTaisen = false;
+    isTaisen = getIsTaisen();
 
     // 効果音の準備
     const startSound = new Audio("src/assets/sound/click.mp3")
     startSound.play()
 
+    // 時間切れ後の処理
     const timer = setInterval(()=>{
       if(state===QuestionState && time<0){
         clearInterval(timer);
-        changeToGameover();
+        updateRoomStateAsync(getRoomId(), getUser(), "finish");
+        updateRoomScoreAsync(getRoomId(), getUser(), score)
+        // changeToGameover();
+        changeToTaisenResult();
       }
       if(state===QuestionState){
         time -= 0.01; // 細かい数値ほど滑らかにプログレスバーが動くが負荷が大きくなる
@@ -123,6 +135,20 @@
       answerImage = "src/assets/batu.png"
     }
     changeToAnswer(); // 解答状態に移行
+  }
+  function changeToTaisenResult(){
+    let roomId = localStorage.getItem("roomId");
+    let user = localStorage.getItem("user");
+    /** 相手がfinishになるまでポーリング */
+    if(user === "parent"){
+      user = "child";
+    }else{
+      user = "parent";
+    }
+    pollUntilFinish(roomId,user, (score) => {
+      enemyScore = score;
+      changeToGameover();
+    });
   }
 </script>
 
