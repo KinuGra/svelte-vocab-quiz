@@ -158,7 +158,7 @@
 
 <main style="background-image: url({haikei})" class = "bg-cover flex flex-col h-svh">
   {#if state===TitleState}
-    <div class="bg-[url('/assets/_school_in_spring_1.jpg')] bg-cover">
+    <div class="bg-[url('/assets/kyositsu.jpg')] bg-cover">
       <TitlePage on:click={changeToQuizstart}></TitlePage>
     </div>
   {:else if state === GameoverState}

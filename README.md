@@ -2,7 +2,7 @@
 
 # 英単語クイズアプリ
 
-![](/src/assets/title.png)
+![](public/assets/title.png)
 
 ## 概要
 
@@ -12,6 +12,10 @@
   - スコアに応じて問題の難易度を変化させます。
 - **ランキング**
   - 名前とスコアをデータベースに保存しランキングを作成します。
+- **英単語読み上げ**
+  - Web Speech APIによって英単語が読み上げられます。
+- **オンライン対戦**
+  - ポーリングによってデータベースの変更を検知して対戦機能を実装しました。
 
 ## 技術スタック
 
@@ -20,8 +24,9 @@
 - Svelte
 - Tailwind CSS
 - Supabase
+  - データベースに問題、スコア、対戦に必要な情報（ルームid、参加者の状態など）を保存し、必要に応じてreadしたりupdateしたりします。
 - PostgreSQL
-- Vercel
+- Web Speech API
 
 ## 環境構築
 
@@ -29,6 +34,9 @@
 npm create vite@latest
 npx svelte-add tailwindcss
 npm install @supabase/supabase-js
+cd プロジェクト名
+npm install
+npm run dev
 ```
 
 <p>環境構築が終わったらsrcフォルダ内のApp.svelteにソースコードを記述します。<br>
